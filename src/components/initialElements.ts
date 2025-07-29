@@ -1,6 +1,10 @@
-const position = {x: 0, y: 0};
+import {ReactFlowEdge, ReactFlowNode} from "@/components/types";
+import {XYPosition} from "@xyflow/react";
 
-export const initialNodes = [
+
+const position: XYPosition = {x: 0, y: 0};
+
+export const initialNodes: ReactFlowNode[] = [
     {
         id: '1',
         type: 'input',
@@ -9,42 +13,42 @@ export const initialNodes = [
     },
     {
         id: '2',
-        data: {label: 'node 2'},
+        data: {label: 'label 2'},
         position,
     },
     {
         id: '2a',
-        data: {label: 'node 2a'},
+        data: {label: 'label 2a'},
         position,
     },
     {
         id: '2b',
-        data: {label: 'node 2b'},
+        data: {label: 'label 2b'},
         position,
     },
     {
         id: '2c',
-        data: {label: 'node 2c'},
+        data: {label: 'label 2c'},
         position,
     },
     {
         id: '2d',
-        data: {label: 'node 2d'},
+        data: {label: 'label 2d'},
         position,
     },
     {
         id: '3',
-        data: {label: 'node 3'},
+        data: {label: 'label 3'},
         position,
     },
     {
         id: '4',
-        data: {label: 'node 4'},
+        data: {label: 'label 4'},
         position,
     },
     {
         id: '5',
-        data: {label: 'node 5'},
+        data: {label: 'label 5'},
         position,
     },
     {
@@ -56,14 +60,14 @@ export const initialNodes = [
     {id: '7', type: 'output', data: {label: 'output'}, position},
 ];
 
-export const initialEdges = [
-    {id: 'e12', source: '1', target: '2', type: 'smoothstep'},
-    {id: 'e13', source: '1', target: '3', type: 'smoothstep'},
-    {id: 'e22a', source: '2', target: '2a', type: 'smoothstep'},
-    {id: 'e22b', source: '2', target: '2b', type: 'smoothstep'},
-    {id: 'e22c', source: '2', target: '2c', type: 'smoothstep'},
-    {id: 'e2c2d', source: '2c', target: '2d', type: 'smoothstep'},
-    {id: 'e45', source: '4', target: '5', type: 'smoothstep'},
-    {id: 'e56', source: '5', target: '6', type: 'smoothstep'},
-    {id: 'e57', source: '5', target: '7', type: 'smoothstep'},
+export const initialEdges: ReactFlowEdge[] = [
+    {id: 'e12', source: '1', target: '2'},
+    {id: 'e13', source: '1', target: '3'},
+    {id: 'e22a', source: '2', target: '2a'},
+    {id: 'e22b', source: '2', target: '2b'},
+    {id: 'e22c', source: '2', target: '2c'},
+    {id: 'e2c2d', source: '2c', target: '2d'},
+    {id: 'e45', source: '4', target: '5'},
+    {id: 'e56', source: '5', target: '6'},
+    {id: 'e57', source: '5', target: '7'},
 ];

@@ -1,12 +1,15 @@
-import {addEdge, Background, Panel, ReactFlow, useEdgesState, useNodesState, useReactFlow} from "@xyflow/react";
-import ElkConstructor from "elkjs";
-import {useCallback, useLayoutEffect} from "react";
-import {initialEdges, initialNodes} from "@/components/initialElements";
+import {Background, Panel, ReactFlow, useEdgesState, useNodesState, useReactFlow} from "@xyflow/react";
+import ElkConstructor, {ELK} from "elkjs";
+import {useCallback, useLayoutEffect, useMemo} from "react";
 
 import '@xyflow/react/dist/style.css';
 import './xy-theme.css';
+import {ElkGraph, LayoutedGraph, ReactFlowEdge, ReactFlowNode} from "@/components/types";
+import {LayoutOptions} from "elkjs/lib/elk-api";
+import {Person} from "@/types/persons";
+import {getGraph} from "@/components/helpers";
 
-const elk = new ElkConstructor();
+const elk: ELK = new ElkConstructor();
 
 // Elk has a *huge* amount of options to configure. To see everything you can
 // tweak check out:
@@ -19,9 +22,12 @@ const elkOptions = {
     'elk.spacing.nodeNode': '80',
 };
 
-const getLayoutedElements = (nodes, edges, options = {}) => {
+const getLayoutedElements = (nodes: ReactFlowNode[], edges: ReactFlowEdge[], options: LayoutOptions = {}): Promise<{
+    layoutedNodes: ReactFlowNode[],
+    layoutedEdges: ReactFlowEdge[]
+}> => {
     const isHorizontal = options?.['elk.direction'] === 'RIGHT';
-    const graph = {
+    const graph: ElkGraph = {
         id: 'root',
         layoutOptions: options,
         children: nodes.map((node) => ({
@@ -35,38 +41,49 @@ const getLayoutedElements = (nodes, edges, options = {}) => {
             width: 150,
             height: 50,
         })),
-        edges: edges,
+        edges: edges.map(flowEdge => ({
+            ...flowEdge,
+            sources: [flowEdge.source],
+            targets: [flowEdge.target],
+            type: 'smoothstep'
+        })),
     };
 
     return elk
         .layout(graph)
-        .then((layoutedGraph) => ({
-            nodes: layoutedGraph.children.map((node) => ({
+        .then((layoutedGraph: LayoutedGraph) => ({
+            layoutedNodes: layoutedGraph.children?.map((node) => ({
                 ...node,
                 // React Flow expects a position property on the node instead of `x`
                 // and `y` fields.
-                position: {x: node.x, y: node.y},
-            })),
+                position: {x: node.x ?? 0, y: node.y ?? 0},
+            })) ?? [],
 
-            edges: layoutedGraph.edges,
+            layoutedEdges: layoutedGraph.edges.map(edge => ({
+                ...edge,
+                source: edge.sources[0],
+                target: edge.targets[0]
+            })),
         }))
-        .catch(console.error);
 };
 
-export const Tree = () => {
-    const [nodes, setNodes, onNodesChange] = useNodesState([]);
-    const [edges, setEdges, onEdgesChange] = useEdgesState([]);
+export type TreeProps = {
+    persons: Person[];
+}
+
+export const Tree = ({persons}: TreeProps) => {
+    const [initialNodes, initialEdges] = useMemo(() => getGraph(persons), [])
+
+    const [nodes, setNodes, onNodesChange] = useNodesState<ReactFlowNode>(initialNodes);
+    const [edges, setEdges, onEdgesChange] = useEdgesState<ReactFlowEdge>(initialEdges);
     const {fitView} = useReactFlow();
 
-    const onConnect = useCallback((params) => setEdges((eds) => addEdge(params, eds)), []);
     const onLayout = useCallback(
-        ({direction, useInitialNodes = false}) => {
-            const opts = {'elk.direction': direction, ...elkOptions};
-            const ns = useInitialNodes ? initialNodes : nodes;
-            const es = useInitialNodes ? initialEdges : edges;
+        ({direction}) => {
+            const opts: LayoutOptions = {'elk.direction': direction, ...elkOptions};
 
-            getLayoutedElements(ns, es, opts).then(
-                ({nodes: layoutedNodes, edges: layoutedEdges}) => {
+            getLayoutedElements(nodes, edges, opts).then(
+                ({layoutedNodes, layoutedEdges}) => {
                     setNodes(layoutedNodes);
                     setEdges(layoutedEdges);
                     fitView();
@@ -77,7 +94,7 @@ export const Tree = () => {
     );
 
     useLayoutEffect(() => {
-        onLayout({direction: 'DOWN', useInitialNodes: true});
+        onLayout({direction: 'DOWN'});
     }, []);
 
     return (
@@ -85,7 +102,6 @@ export const Tree = () => {
             <ReactFlow
                 nodes={nodes}
                 edges={edges}
-                onConnect={onConnect}
                 onNodesChange={onNodesChange}
                 onEdgesChange={onEdgesChange}
                 fitView
